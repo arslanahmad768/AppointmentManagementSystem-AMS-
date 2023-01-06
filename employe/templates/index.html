@@ -1,0 +1,220 @@
+{% extends 'base.html' %} {% block content%}
+<div class="container d-flex p-3 mt-5 bg-info">
+  <h3>
+    <a class="text-white" style="text-decoration: none" href="{% url 'index' %}"
+      >User Record</a
+    >
+  </h3>
+  <form method="post" action="{% url 'index' %}">
+    {% csrf_token %}
+    <div class="input-group">
+      <input
+        type="search"
+        class="form-control rounded float-right"
+        style="margin-left: 500px"
+        name="search"
+        placeholder="Search..."
+        aria-label="Search"
+        aria-describedby="search-addon"
+      />
+      <input type="submit" class="btn btn-outline-light" value="Search" />
+    </div>
+  </form>
+  <a
+    type="button "
+    class="btn btn-dark text-white"
+    style="margin-left: auto"
+    href="{% url 'registeruser' %}"
+  >
+    Add User
+  </a>
+</div>
+<div class="container">
+  <table class="table table-striped" id="employes"></table>
+  <a href="{% url 'importexcel'  %}" class="btn btn-secondary"
+    >Import from Excel</a
+  >
+  {% with check=1 %}
+  <a
+    href="{% url 'register' check %}"
+    class="btn btn-outline-primary"
+    style="margin-left: 300px"
+    >Add Appointment</a
+  >
+  {% endwith %}
+  <a href="{% url 'exportexcel'  %}" class="btn btn-secondary float-right mr-2"
+    >Export to Excel</a
+  >
+</div>
+<div class="container d-flex p-3 mt-5 bg-info">
+  <h3>
+    <a class="text-white" style="text-decoration: none" href="{% url 'index' %}"
+      >Appointment Record</a
+    >
+  </h3>
+</div>
+<div class="container">
+  <table class="table table-striped" id="appointment"></table>
+</div>
+
+<script>
+  // api url
+  const api_url = "http://127.0.0.1:8000/employe/employeApi/";
+  // Defining async function
+  async function getapi(url) {
+    // Storing response
+    const response = await fetch(url);
+
+    // Storing data in form of JSON
+    var data = await response.json();
+    console.log(data);
+    for (let i in data) {
+      console.log("Value is :", data[i].id);
+    }
+    if (response) {
+    }
+    show(data);
+  }
+  // Calling that async function
+  getapi(api_url);
+
+  function show(data) {
+    console.log(data);
+    let tab = `<thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Phone No</th>
+        <th scope="col" class="text-center">Action</th>
+      </tr>
+        </thead>`;
+
+    // Loop to access all rows
+    for (let d of data) {
+      tab += `<tbody>
+        <tr>
+    	<th scope="row">${d.id}</th>
+            <td>${d.user.first_name}</td>
+            <td>${d.user.email}</td>
+            <td>${d.phoneno}</td>
+            <td class="text-right">
+            <a href="{% url 'edit' %}" class="btn btn-warning"
+            onclick="edit(${d.id})">Edit</a >
+            <button onClick = "deleteEmploye(${d.id})"  class="btn btn-danger ml-2">Delete</button >
+            </td>
+        </tr>
+    <tbody>`;
+    }
+    // Setting innerHTML as tab variable
+    document.getElementById("employes").innerHTML = tab;
+  }
+
+  function edit(id) {
+    console.log("Id Is :", id);
+    localStorage.setItem("id", id);
+  }
+  function deleteEmploye(id) {
+    const Del_Api = `http://127.0.0.1:8000/employe/employeApi/${id}`;
+
+    const csrftoken = document.querySelector(
+      "[name=csrfmiddlewaretoken]"
+    ).value;
+    var myHeaders = new Headers();
+    myHeaders.append("X-CSRFToken", csrftoken);
+
+    var raw = "";
+
+    var requestOptions = {
+      method: "DELETE",
+      headers: myHeaders,
+      body: raw,
+      // redirect: "follow",
+    };
+
+    fetch(Del_Api, requestOptions)
+      .then((response) => response.text())
+      .then(
+        (result) =>
+          (window.location.href = "http://127.0.0.1:8000/employe/index/")
+      )
+      .catch((error) => console.log("error", error));
+  }
+  async function getAppointmentData(url) {
+    // Storing response
+    const response = await fetch(url);
+
+    // Storing data in form of JSON
+    var data = await response.json();
+    console.log(data);
+    for (let i in data) {
+      console.log("Value is :", data[i].id);
+    }
+    if (response) {
+    }
+    showAppointment(data);
+  }
+  const appointment_api = "http://127.0.0.1:8000/employe/appointment/";
+  getAppointmentData(appointment_api);
+  function showAppointment(data) {
+    console.log(data);
+    let tab = `<thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Phone No</th>
+        <th scope="col">Date</th>
+        <th scope="col">Time</th>
+        <th scope="col" class="text-center">Action</th>
+      </tr>
+        </thead>`;
+
+    // Loop to access all rows
+    for (let d of data) {
+      // console.log(typeof d.calender);
+      date = d.calender;
+      date = date.split("T");
+      time = date[1].split("Z");
+      console.log("before Time", time[0]);
+      time = tConvert(time[0]);
+      console.log(typeof date);
+      // console.log("date is", date[0]);
+      console.log("Time is ", time);
+      // t = d.split("Z");
+      tab += `<tbody>
+        <tr>
+    	<th scope="row">${d.id}</th>
+            <td>${d.employe.user.first_name}</td>
+            <td>${d.employe.user.email}</td>
+            <td>${d.employe.phoneno}</td>
+            <td>${date[0]}</td>
+            <td>${time}</td>
+            <td class="text-right">
+            <a href="{% url 'edit' %}" class="btn btn-warning"
+            onclick="edit(${d.id})">Edit</a >
+            <button onClick = "deleteEmploye(${d.id})"  class="btn btn-danger ml-2">Delete</button >
+            </td>
+        </tr>
+    <tbody>`;
+    }
+    // Setting innerHTML as tab variable
+    document.getElementById("appointment").innerHTML = tab;
+  }
+  function tConvert(time) {
+    console.log("function Called");
+    // Check correct time format and split into components
+    time = time
+      .toString()
+      .match(/^([01]\d|2[0-3])(:)([0-5]\d)(:[0-5]\d)?$/) || [time];
+
+    if (time.length > 1) {
+      // If time format correct
+      time = time.slice(1); // Remove full string match value
+      time[5] = +time[0] < 12 ? "AM" : "PM"; // Set AM/PM
+      time[0] = +time[0] % 12 || 12; // Adjust hours
+    }
+    return time.join(""); // return adjusted time or original string
+  }
+</script>
+{% endblock %}

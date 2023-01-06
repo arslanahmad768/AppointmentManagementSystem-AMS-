@@ -1,0 +1,41 @@
+{% extends 'dashboard.html' %}{% block content%}
+<div class="mt-4 container">
+  <h3>Import Excel file</h3>
+  <br />
+  <form
+    method="post"
+    enctype="multipart/form-data"
+    action="{% url 'importexcel' %}"
+    id="form"
+  >
+    {% csrf_token %}
+    <input type="file" id="file" name="file" required />
+    <input type="submit" class="btn btn-dark" value="Submit" />
+  </form>
+</div>
+<script>
+  form = document.getElementById("form");
+  form.addEventListener("submit", handleExcelFile);
+
+  async function handleExcelFile(e) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const Data = new FormData();
+    const excelUrl = document.querySelector("#file");
+    let FileUrl = excelUrl.files[0];
+    Data.append("excel_file", FileUrl);
+    console.log("File is ", FileUrl);
+    csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    fetch("http://127.0.0.1:8000/employe/excelFileApi/", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrftoken,
+      },
+      body: Data,
+    })
+      .then((response) => response.json())
+      .then((result) => console.log(result))
+      .catch((error) => console.log("error :", error));
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends 'base.html' %} {% block content%}
+<div class="container" style="width: 600px">
+  <h2 class="text-center text-dark" style="margin-top: 15px">
+    Registration form
+  </h2>
+  <span id="mynamehint" style="color: red; font-size: 17px"></span>
+  <br />
+  <form method="post" action="" enctype="multipart/form-data" name="form">
+    {% csrf_token %}
+    <div class="form-row">
+      <div class="col">
+        <label for="fname">First Name</label>
+        <input
+          type="text"
+          id="fname"
+          class="form-control"
+          name="fname"
+          placeholder="First name"
+        />
+      </div>
+      <div class="col">
+        <label for="lname">Last Name</label>
+        <input
+          type="text"
+          id="lname"
+          class="form-control"
+          name="lname"
+          placeholder="Last name"
+        />
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="inputusername">Username</label>
+      <input
+        type="text"
+        class="form-control"
+        id="inputusername"
+        name="username"
+        required
+        placeholder="Username"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="inputEmail4">Email</label>
+      <input
+        type="email"
+        class="form-control"
+        id="inputEmail4"
+        name="email"
+        placeholder="Email"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="inputPassword4">Password</label>
+      <input
+        type="password"
+        class="form-control"
+        id="inputPassword4"
+        maxlength="8"
+        minlength="4"
+        required
+        name="pass"
+        placeholder="Password"
+      />
+    </div>
+    <div class="form-group">
+      <label for="number">Phone No</label>
+      <input
+        type="tel"
+        class="form-control"
+        id="number"
+        name="phoneno"
+        pattern="^((\+92)?(0092)?(92)?(0)?)(3)([0-9]{9})$"
+        placeholder="03xxxxxxxxx"
+      />
+    </div>
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label for="inputAge">Age</label>
+        <input
+          type="number"
+          name="age"
+          placeholder="Enter Age"
+          class="form-control"
+          id="inputAge"
+          min="1"
+          max="100"
+        />
+      </div>
+      <div class="form-group col-md-6">
+        <label for="inputState">Marital Status</label>
+        <select id="inputState" class="form-control" name="status">
+          <option selected>Choose...</option>
+          <option value="Single">Single</option>
+          <option value="Married">Married</option>
+        </select>
+      </div>
+    </div>
+    {% if check%}
+    <div class="form-group">
+      <label for="number">Enter Date</label>
+      <input
+        type="datetime-local"
+        class="form-control"
+        id="inputdate"
+        name="datetime"
+        placeholder="Enter Date"
+      />
+    </div>
+    {% endif %}
+    <div class="form-group">
+      <label for="industry">Industry</label>
+      <select class="form-control" data-live-search="true" name="industry">
+        <option>Choose...</option>
+        <option value="Agriculture">Agriculture</option>
+        <option value="Construction">Construction</option>
+        <option value="Education">Education</option>
+        <option value="Energy Supply">Energy Supply</option>
+        <option value="IT">IT</option>
+        <!-- <option value="Real State">Real State</option>
+            <option value="Mining">Mining</option>
+            <option value="Food">Food</option> -->
+      </select>
+    </div>
+    <div class="form-group"></div>
+
+    <div class="form-group">
+      <label for="exampleFormControlTextarea1">About Me</label>
+      <textarea
+        class="form-control"
+        id="exampleFormControlTextarea1"
+        rows="3"
+        name="description"
+      ></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="customFile">Profile Photo</label>
+      <input
+        type="file"
+        accept="image/*"
+        name="image"
+        class="form-control"
+        id="customFile"
+      />
+    </div>
+    <button type="submit" class="btn btn-primary mb-4">Add User</button>
+  </form>
+</div>
+<script>
+  document.form.username.onblur = function () {
+    element = document.getElementById("mynamehint");
+    element.innerHTML = " Please Enter Your Username...! ";
+  };
+
+  function validatePhoneNumber() {
+    var re = /^((\+92)?(0092)?(92)?(0)?)(3)([0-9]{9})$/g;
+    var phoneno = document.getElementById("number").value;
+    return re.test(phoneno);
+  }
+
+  document.getElementById("number").onchange = function () {
+    console.log("called the Page");
+    if (!validatePhoneNumber()) {
+      document.getElementById("mynamehint").innerHTML = "Pattern 03xxxxxxxxx";
+    } else {
+      document.getElementById("mynamehint").innerHTML = "";
+    }
+  };
+  form = document.querySelector("form");
+  form.addEventListener("submit", handleFormSubmit);
+  async function handleFormSubmit(event) {
+    event.preventDefault();
+    let customerAppointment = "{{check}}";
+    const form = event.currentTarget;
+    customerAppointment ? registerAppointment(form) : registerEmploye(form);
+  }
+  function fetchApi(Data, Api_URL) {
+    const csrftoken = document.querySelector(
+      "[name=csrfmiddlewaretoken]"
+    ).value;
+    var myHeaders = new Headers();
+    myHeaders.append("X-CSRFToken", csrftoken);
+    var requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: Data,
+    };
+
+    delete requestOptions.headers["Content-Type"];
+    fetch(Api_URL, requestOptions)
+      .then((response) => response.text())
+      .then((result) =>
+        // (window.location.href = "http://127.0.0.1:8000/employe/index/")
+        console.log(result)
+      )
+      .catch((error) => console.log("error", error));
+  }
+  function registerAppointment(form) {
+    const Data = new FormData();
+    Data.append("employe.user.username", form.username.value);
+    Data.append("employe.user.first_name", form.fname.value);
+    Data.append("employe.user.last_name", form.lname.value);
+    Data.append("employe.user.email", form.email.value);
+    Data.append("employe.user.password", form.pass.value);
+    Data.append("employe.phoneno", form.phoneno.value);
+    Data.append("employe.age", form.age.value);
+    Data.append("employe.status", form.status.value);
+
+    console.log("date time is ", form.datetime.value);
+    const imageUrl = document.querySelector("#customFile");
+    let image = imageUrl.files[0];
+
+    Data.append("employe.image", image);
+    Data.append("employe.industry", form.industry.value);
+    Data.append("employe.description", form.description.value);
+    Data.append("calender", form.datetime.value);
+    var Api_URL = "http://127.0.0.1:8000/employe/appointment/";
+    fetchApi(Data, Api_URL);
+  }
+  function registerEmploye(form) {
+    const Data = new FormData();
+    Data.append("user.username", form.username.value);
+    Data.append("user.first_name", form.fname.value);
+    Data.append("user.last_name", form.lname.value);
+    Data.append("user.email", form.email.value);
+    Data.append("user.password", form.pass.value);
+    Data.append("phoneno", form.phoneno.value);
+    Data.append("age", form.age.value);
+    Data.append("status", form.status.value);
+    const imageUrl = document.querySelector("#customFile");
+    let image = imageUrl.files[0];
+
+    Data.append("image", image);
+    Data.append("industry", form.industry.value);
+    Data.append("description", form.description.value);
+    var Api_URL = "http://127.0.0.1:8000/employe/employeApi/";
+    fetchApi(Data, Api_URL);
+  }
+
+  $(document).ready(function () {
+    $("#inputdate").focus(function () {
+      var dtToday = new Date();
+      console.log();
+      var month = dtToday.getMonth() + 1;
+      var day = dtToday.getDate();
+      var year = dtToday.getFullYear();
+      var hours = dtToday.getHours();
+      var minutes = dtToday.getMinutes();
+      var seconds = dtToday.getSeconds();
+      if (month < 10) month = "0" + month.toString();
+      if (day < 10) day = "0" + day.toString();
+      if (hours < 10) hours = "0" + hours.toString();
+      if (minutes < 10) minutes = "0" + minutes.toString();
+      if (seconds < 10) seconds = "0" + seconds.toString();
+      var maxDate =
+        month +
+        "-" +
+        day +
+        "-" +
+        year +
+        "T" +
+        hours +
+        ":" +
+        minutes +
+        ":" +
+        seconds;
+      console.log("Date Format is:", maxDate);
+      $("#inputdate").attr("min", maxDate);
+    });
+  });
+</script>
+{% endblock %}

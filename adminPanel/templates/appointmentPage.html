@@ -1,0 +1,163 @@
+{% extends 'dashboard.html' %}{% block content%}
+<div class="container d-flex p-3 mt-5 bg-info">
+  <h3>
+    <a
+      class="text-white"
+      style="text-decoration: none"
+      href="{% url 'appointmentpage' %}"
+      >Appointment Record</a
+    >
+  </h3>
+  <form method="post" action="" name="form">
+    {% csrf_token %}
+    <div class="input-group">
+      <input
+        type="search"
+        id="searchform"
+        class="form-control rounded float-right"
+        style="margin-left: 500px"
+        name="search"
+        placeholder="Search..."
+        aria-label="Search"
+        aria-describedby="search-addon"
+        id="searchform"
+      />
+      <input
+        type="submit"
+        id="searchbtn"
+        class="btn btn-outline-light"
+        value="Search"
+        id="searchbtn"
+      />
+    </div>
+  </form>
+  {% with check=1 %}
+  <a
+    type="button "
+    class="btn btn-dark text-white"
+    style="margin-left: auto"
+    href="{% url 'addUser' check%}"
+  >
+    Add Appointment
+  </a>
+  {% endwith %}
+</div>
+<span id="span"></span>
+<span id="span"></span>
+<div class="container mb-5" id="importExport">
+  <table class="table table-striped" id="appointment"></table>
+</div>
+<script>
+  var jwtToken = JSON.parse(localStorage.getItem("Token"));
+  async function getAppointmentData(url) {
+    // Storing response
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + jwtToken.access,
+      },
+    });
+
+    // Storing data in form of JSON
+    var data = await response.json();
+    if (data.length != 0) {
+      showAppointment(data);
+    } else {
+      var spanElement = document.getElementById("span");
+      spanElement.innerHTML = "Oops,There is no record exist....";
+      spanElement.className += "lead m-auto";
+    }
+  }
+  const appointment_api = "http://127.0.0.1:8000/employe/appointment/";
+  getAppointmentData(appointment_api);
+  function showAppointment(data) {
+    console.log(data);
+    let tab = `<thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Phone No</th>
+        <th scope="col">Date</th>
+        <th scope="col">Time</th>
+        <th scope="col" class="text-center">Action</th>
+      </tr>
+        </thead>`;
+
+    // Loop to access all rows
+    for (let d of data) {
+      // console.log(typeof d.calender);
+      date = d.calender;
+      date = date.split("T");
+      time = date[1].split("Z");
+      console.log("before Time", time[0]);
+      time = tConvert(time[0]);
+      console.log(typeof date);
+      // console.log("date is", date[0]);
+      console.log("Time is ", time);
+      // t = d.split("Z");
+      tab += `<tbody>
+        <tr>
+    	<th scope="row">${d.id}</th>
+            <td>${d.employe.user.first_name}</td>
+            <td>${d.employe.user.email}</td>
+            <td>${d.employe.phoneno}</td>
+            <td>${date[0]}</td>
+            <td>${time}</td>
+            <td class="text-right">
+            <a href="{% url 'edit' %}" class="btn btn-warning"
+            onclick="edit(${d.id})">Edit</a >
+            <button onClick = "deleteEmploye(${d.id})"  class="btn btn-danger ml-2">Delete</button >
+            </td>
+        </tr>
+    <tbody>`;
+    }
+    // Setting innerHTML as tab variable
+    document.getElementById("appointment").innerHTML = tab;
+  }
+  function tConvert(time) {
+    console.log("function Called");
+    // Check correct time format and split into components
+    time = time
+      .toString()
+      .match(/^([01]\d|2[0-3])(:)([0-5]\d)(:[0-5]\d)?$/) || [time];
+
+    if (time.length > 1) {
+      // If time format correct
+      time = time.slice(1); // Remove full string match value
+      time[5] = +time[0] < 12 ? "AM" : "PM"; // Set AM/PM
+      time[0] = +time[0] % 12 || 12; // Adjust hours
+    }
+    return time.join(""); // return adjusted time or original string
+  }
+
+  searchBtn = document.getElementById("searchbtn");
+  searchBtn.addEventListener("click", searchRecord);
+  function searchRecord(e) {
+    e.preventDefault();
+    var value = document.getElementById("searchform").value;
+    var csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    var ApiUrl = `http://127.0.0.1:8000/employe/appointment/?search=${value}`;
+    fetch(ApiUrl, {
+      method: "get",
+      headers: {
+        "X-CSRFToken": csrftoken,
+        Authorization: "Bearer " + jwtToken.access,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.length != 0) {
+          showAppointment(data);
+        } else {
+          spanElement = document.getElementById("span");
+          spanElement.className += "mt-5 lead";
+          spanElement.innerHTML = "There is no record Exist...";
+
+          document.getElementById("importExport").innerHTML = "";
+        }
+      })
+      .catch((err) => console.log(err));
+  }
+</script>
+{% endblock %}
